@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
+import { relName } from "@/lib/relations";
 
 function naira(kobo: number) {
   return "₦" + (kobo / 100).toLocaleString("en-NG");
@@ -42,7 +43,7 @@ export default async function ProductsPage() {
                   {p.name}
                   </Link>
                   <p className="text-sm text-purple-200">
-                    {p.categories?.name} · {naira(p.price_kobo)}
+                    {relName(p.categories)} · {naira(p.price_kobo)}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1 text-xs">

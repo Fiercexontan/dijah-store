@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { setStatus, addColor } from "./actions";
+import { relName } from "@/lib/relations";
 
 function naira(kobo: number) {
   return "₦" + (kobo / 100).toLocaleString("en-NG");
@@ -69,7 +70,7 @@ export default async function ProductPage({
 
       <h1 className="mt-3 text-2xl font-bold">{product.name}</h1>
       <p className="mt-1 text-purple-200">
-        {product.categories?.name} · {naira(product.price_kobo)}
+        {relName(product.categories)} · {naira(product.price_kobo)}
         {product.is_preorder ? " · Pre-order" : ""}
       </p>
 
