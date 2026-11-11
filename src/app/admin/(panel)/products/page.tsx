@@ -38,7 +38,9 @@ export default async function ProductsPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold">{p.name}</p>
+                  <Link href={`/admin/products/${p.id}`} className="font-semibold underline">
+                  {p.name}
+                  </Link>
                   <p className="text-sm text-purple-200">
                     {p.categories?.name} · {naira(p.price_kobo)}
                   </p>
