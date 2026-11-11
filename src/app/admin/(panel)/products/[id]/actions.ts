@@ -96,3 +96,61 @@ export async function saveStock(formData: FormData) {
 
   revalidatePath(`/admin/products/${productId}`);
 }
+
+
+export async function addImage(
+  productId: string,
+  colorId: string,
+  path: string
+): Promise<{ ok: boolean }> {
+  const { supabase } = await requireAdmin();
+
+  // The file must sit in this product's and colour's own folder
+  if (!path.startsWith(`${productId}/${colorId}/`) || path.includes("..")) {
+    return { ok: false };
+  }
+
+  const { data: color } = await supabase
+    .from("product_colors")
+    .select("id")
+    .eq("id", colorId)
+    .eq("product_id", productId)
+    .maybeSingle();
+  if (!color) return { ok: false };
+
+  const { count } = await supabase
+    .from("product_images")
+    .select("id", { count: "exact", head: true })
+    .eq("color_id", colorId);
+
+  const { error } = await supabase.from("product_images").insert({
+    product_id: productId,
+    color_id: colorId,
+    storage_path: path,
+    sort_order: count ?? 0,
+  });
+  if (error) return { ok: false };
+
+  revalidatePath(`/admin/products/${productId}`);
+  return { ok: true };
+}
+
+export async function deleteImage(formData: FormData) {
+  const { supabase } = await requireAdmin();
+
+  const imageId = String(formData.get("image_id") ?? "");
+  const productId = String(formData.get("product_id") ?? "");
+
+  const { data: img } = await supabase
+    .from("product_images")
+    .select("id, storage_path")
+    .eq("id", imageId)
+    .eq("product_id", productId)
+    .maybeSingle();
+  if (!img) return;
+
+  await supabase.storage.from("product-images").remove([img.storage_path]);
+  await supabase.from("product_images").delete().eq("id", img.id);
+
+  revalidatePath(`/admin/products/${productId}`);
+}

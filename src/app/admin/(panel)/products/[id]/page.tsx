@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { relName } from "@/lib/relations";
 import { sizesFor } from "@/lib/sizes";
-import { setStatus, addColor, saveStock } from "./actions";
+import { setStatus, addColor, saveStock, deleteImage } from "./actions";
+import ImageUploader from "@/components/ImageUploader";
 
 function naira(kobo: number) {
   return "₦" + (kobo / 100).toLocaleString("en-NG");
@@ -54,7 +55,7 @@ export default async function ProductPage({
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, price_kobo, status, is_preorder, description, categories(name, size_type), product_colors(id, name, sort_order), product_variants(color_id, size_label, stock_quantity)"
+      "id, name, price_kobo, status, is_preorder, description, categories(name, size_type), product_colors(id, name, sort_order), product_variants(color_id, size_label, stock_quantity), product_images(id, color_id, storage_path, sort_order)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -70,11 +71,17 @@ export default async function ProductPage({
     (a, b) => a.sort_order - b.sort_order
   );
   const variants = product.product_variants ?? [];
+  
+    const images = [...(product.product_images ?? [])].sort(
+    (a, b) => a.sort_order - b.sort_order
+  );
+  const imageUrl = (path: string) =>
+    supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
 
   const stockOf = (colorId: string, size: string) =>
     variants.find((v) => v.color_id === colorId && v.size_label === size)
       ?.stock_quantity;
-
+   
   return (
     <>
       <Link href="/admin/products" className="text-sm text-purple-200 underline">
@@ -133,6 +140,32 @@ export default async function ProductPage({
                 className="rounded-2xl border border-white/15 bg-white/10 p-4"
               >
                 <p className="font-semibold">{c.name}</p>
+
+                                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {images
+                    .filter((img) => img.color_id === c.id)
+                    .map((img) => (
+                      <div key={img.id} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imageUrl(img.storage_path)}
+                          alt={`${product.name} in ${c.name}`}
+                          className="aspect-[3/4] w-full rounded-lg object-cover"
+                        />
+                        <form action={deleteImage} className="absolute right-1 top-1">
+                          <input type="hidden" name="image_id" value={img.id} />
+                          <input type="hidden" name="product_id" value={product.id} />
+                          <button
+                            aria-label="Delete photo"
+                            className="rounded-full bg-black/60 px-2 py-1 text-xs"
+                          >
+                            ✕
+                          </button>
+                        </form>
+                      </div>
+                    ))}
+                </div>
+                <ImageUploader productId={product.id} colorId={c.id} />
 
                 {sizes.length === 0 ? (
                   <p className="mt-2 text-sm text-purple-200">
