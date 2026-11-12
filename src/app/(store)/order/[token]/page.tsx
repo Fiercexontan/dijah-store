@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { naira } from "@/lib/format";
+import PayButton from "@/components/PayButton";
+import ClearCart from "@/components/ClearCart";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -20,12 +22,24 @@ const statusLabel: Record<string, string> = {
   returned: "Returned",
 };
 
+const paymentNotes: Record<string, string> = {
+  not_successful:
+    "Your payment wasn't completed, so you haven't been charged. You can try again below while your items are held.",
+  mismatch:
+    "We couldn't match your payment to this order. Please message us on WhatsApp and we'll sort it out.",
+  error:
+    "We couldn't confirm your payment yet. Please don't pay again. Refresh this page in a minute, and message us on WhatsApp if it still shows unpaid.",
+};
+
 export default async function OrderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ paid?: string; payment?: string }>;
 }) {
   const { token } = await params;
+  const sp = await searchParams;
   if (!/^[0-9a-f]{32}$/.test(token)) notFound();
 
   const admin = createAdminClient();
@@ -39,14 +53,34 @@ export default async function OrderPage({
 
   if (!order) notFound();
   const items = order.order_items ?? [];
+  const isPaid = order.payment_status === "paid";
+  const canPay = order.payment_status !== "paid" && order.status === "pending_payment";
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
+      {isPaid && <ClearCart />}
+
       <p className="text-xs uppercase tracking-[0.25em] text-lilac">Your order</p>
       <h1 className="font-heading mt-1 text-4xl font-bold">{order.order_number}</h1>
-      <p className="mt-2 text-gold">
-        {statusLabel[order.status] ?? order.status}
-      </p>
+      <p className="mt-2 text-gold">{statusLabel[order.status] ?? order.status}</p>
+
+      {isPaid && (
+        <div className="mt-5 rounded-2xl bg-mint/15 px-5 py-4 text-sm text-mint">
+          <p className="font-semibold">Payment received. Thank you!</p>
+          <p className="mt-1 text-white/80">
+            {order.has_preorder
+              ? "We'll keep you updated on WhatsApp and let you know when your pre-order arrives. "
+              : ""}
+            We&apos;ll confirm your delivery fee and arrange delivery with you on WhatsApp.
+          </p>
+        </div>
+      )}
+
+      {!isPaid && sp.payment && paymentNotes[sp.payment] && (
+        <p className="mt-5 rounded-2xl bg-rose/15 px-5 py-4 text-sm text-rose">
+          {paymentNotes[sp.payment]}
+        </p>
+      )}
 
       <div className="glass mt-6 rounded-2xl p-5">
         <p className="font-heading text-xl">Items</p>
@@ -80,11 +114,15 @@ export default async function OrderPage({
         </p>
       </div>
 
-      {order.payment_status === "unpaid" && (
-        <p className="mt-6 rounded-xl bg-white/10 px-4 py-3 text-sm text-white/80">
-          Your items are held for 15 minutes while you complete payment. Online
-          payment is the next step we&apos;re connecting.
-        </p>
+      {canPay && (
+        <div className="glass mt-4 rounded-2xl p-5">
+          <p className="text-sm text-white/80">
+            Your items are held for 15 minutes while you complete payment.
+          </p>
+          <div className="mt-4">
+            <PayButton token={token} amountText={naira(order.subtotal_kobo)} />
+          </div>
+        </div>
       )}
     </main>
   );
