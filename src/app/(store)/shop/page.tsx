@@ -276,14 +276,17 @@ export default async function ShopPage({
 
             return (
               <li key={p.id}>
-                <Link href={`/product/${p.slug}`} className="block">
-                  <div className="relative overflow-hidden rounded-2xl bg-white/10">
+                  <Link
+                  href={`/product/${p.slug}`}
+                  className="group block transition duration-300 ease-out hover:-translate-y-2 active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0" 
+                  >
+                    <div className="relative overflow-hidden rounded-2xl bg-white/10 shadow-lg transition duration-300 group-hover:shadow-2xl group-hover:shadow-black/40">
                     {url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={url}
                         alt={p.name}
-                        className="aspect-[3/4] w-full object-cover"
+                          className="aspect-[3/4] w-full object-cover transition duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
                       />
                     ) : (
                       <div className="flex aspect-[3/4] items-center justify-center text-sm text-purple-300">
