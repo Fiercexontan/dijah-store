@@ -70,7 +70,8 @@ export default function ImageUploader({
           await supabase.storage.from("product-images").remove([path]);
           throw new Error("Could not record the photo");
         }
-      } catch {
+            } catch (err) {
+        console.error("Upload failed:", err);
         failed += 1;
       }
     }
