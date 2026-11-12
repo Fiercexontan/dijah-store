@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useCart } from "@/lib/cart";
 
-type Size = { label: string; stock: number };
+type Size = { id: string; label: string; stock: number };
 type ColorOption = {
   id: string;
   name: string;
@@ -32,8 +34,18 @@ export default function ProductView({
   const [colorIndex, setColorIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
   const [size, setSize] = useState<string | null>(null);
+  const cart = useCart();
+  const [justAdded, setJustAdded] = useState(false);
 
   const color = colors[colorIndex];
+    const selectedSize = color?.sizes.find((s) => s.label === size);
+
+  function addToCart() {
+    if (!selectedSize) return;
+    cart.add(selectedSize.id, 1);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 2500);
+  }
 
   function chat(extra?: string) {
     if (!whatsappNumber) return;
@@ -192,7 +204,25 @@ export default function ProductView({
             })()}
           </p>
         )}
-
+        
+                <div className="mt-8">
+          <button
+            onClick={addToCart}
+            disabled={!selectedSize}
+            className="w-full rounded-xl bg-gold py-3 font-semibold text-night disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {selectedSize ? "Add to cart" : "Choose a size to add to cart"}
+          </button>
+          {justAdded && (
+            <p role="status" className="mt-2 text-center text-sm text-mint">
+              Added to your cart.{" "}
+              <Link href="/cart" className="underline">
+                View cart
+              </Link>
+            </p>
+          )}
+        </div> 
+         
         {whatsappNumber && (
           <div className="mt-8 space-y-3">
             <button

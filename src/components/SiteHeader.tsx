@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import CartLink from "./CartLink";
 
 export default function SiteHeader() {
   return (
@@ -23,6 +24,7 @@ export default function SiteHeader() {
           <Link href="/shop" className="rounded-xl px-4 py-2 hover:bg-white/10">
             Shop
           </Link>
+          <CartLink />
         </nav>
       </div>
     </header>

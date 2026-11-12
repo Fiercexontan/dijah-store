@@ -15,7 +15,7 @@ async function getProduct(slug: string) {
   const { data } = await supabase
     .from("products")
     .select(
-      "id, name, description, price_kobo, sale_price_kobo, is_preorder, expected_date, categories(name, size_type), product_colors(id, name, sort_order), product_images(color_id, storage_path, sort_order), product_variants(color_id, size_label, stock_quantity)"
+      "id, name, description, price_kobo, sale_price_kobo, is_preorder, expected_date, categories(name, size_type), product_colors(id, name, sort_order), product_images(color_id, storage_path, sort_order), product_variants(id, color_id, size_label, stock_quantity)"
     )
     .eq("slug", slug)
     .eq("status", "active")
@@ -63,7 +63,7 @@ export default async function ProductPage({
         .map((i) => publicUrl(i.storage_path)),
       sizes: (product.product_variants ?? [])
         .filter((v) => v.color_id === c.id)
-        .map((v) => ({ label: v.size_label, stock: v.stock_quantity }))
+        .map((v) => ({ id: v.id, label: v.size_label, stock: v.stock_quantity }))
         .sort((a, b) => sizeOrder.indexOf(a.label) - sizeOrder.indexOf(b.label)),
     }));
 
