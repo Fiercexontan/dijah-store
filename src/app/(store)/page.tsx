@@ -1,6 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import ProductCard from "@/components/ProductCard";
+import { mainImagePath, naira } from "@/lib/format";
+import { relName } from "@/lib/relations";
+import WhyShop from "@/components/WhyShop";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -30,6 +34,24 @@ export default async function HomePage() {
         "Hello DIJAH FASHION & ACCESSORIES, I'd like to ask about your latest styles."
       )}`
     : null;
+  
+    const [{ data: catRows }, { data: latest }] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("id, name, slug, parent_id")
+      .eq("is_active", true)
+      .order("sort_order"),
+    supabase
+      .from("products")
+      .select(
+        "id, name, slug, price_kobo, sale_price_kobo, is_preorder, categories(name), product_colors(id, sort_order), product_images(color_id, storage_path, sort_order)"
+      )
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(8),
+  ]);
+  const categoryTiles = (catRows ?? []).filter((c) => c.parent_id);
+  const latestProducts = latest ?? [];
 
   return (
     <main>
@@ -119,7 +141,93 @@ export default async function HomePage() {
             />
           </div>
         </div>
+            </section>
+
+      <section className="mx-auto mt-10 max-w-6xl px-3">
+        <h2 className="font-heading text-3xl font-bold">Shop by category</h2>
+        <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {categoryTiles.map((c) => (
+            <li key={c.id}>
+              <Link
+                href={`/shop?category=${c.slug}`}
+                className="glass group flex h-28 items-end justify-between rounded-2xl p-4 transition duration-300 hover:-translate-y-1 hover:bg-white/15 motion-reduce:transition-none"
+              >
+                <span className="font-heading text-lg leading-tight">{c.name}</span>
+                <span
+                  aria-hidden
+                  className="text-gold transition group-hover:translate-x-1"
+                >
+                  →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
+
+      {latestProducts.length > 0 && (
+        <section className="mx-auto mt-12 max-w-6xl px-3">
+          <div className="flex items-end justify-between">
+            <h2 className="font-heading text-3xl font-bold">New arrivals</h2>
+            <Link href="/shop" className="text-sm text-gold underline">
+              See all
+            </Link>
+          </div>
+          <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {latestProducts.map((p) => {
+              const path = mainImagePath(
+                p.product_colors ?? [],
+                p.product_images ?? []
+              );
+              return (
+                <li key={p.id}>
+                  <ProductCard
+                    slug={p.slug}
+                    name={p.name}
+                    categoryName={relName(p.categories)}
+                    priceText={naira(p.price_kobo)}
+                    salePriceText={
+                      p.sale_price_kobo !== null ? naira(p.sale_price_kobo) : null
+                    }
+                    isPreorder={p.is_preorder}
+                    imageUrl={
+                      path
+                        ? supabase.storage.from("product-images").getPublicUrl(path)
+                            .data.publicUrl
+                        : null
+                    }
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      <WhyShop whatsapp={whatsapp} />
+
+      {whatsapp && (
+        <section className="mx-auto mt-12 max-w-6xl px-3">
+          <div className="glass relative overflow-hidden rounded-[2rem] p-8 text-center sm:p-12">
+            <div className="pointer-events-none absolute -top-16 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-gold/25 blur-3xl" />
+            <h2 className="font-heading relative text-3xl font-bold sm:text-4xl">
+              Can&apos;t decide? Let&apos;s chat.
+            </h2>
+            <p className="relative mx-auto mt-3 max-w-md text-white/80">
+              Tell us what you&apos;re looking for and we&apos;ll help you find the
+              perfect piece.
+            </p>
+            <a
+              href={whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative mt-6 inline-block rounded-2xl bg-mint px-8 py-3 font-semibold text-night"
+            >
+              Message us on WhatsApp
+            </a>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

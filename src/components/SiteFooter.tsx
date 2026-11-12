@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function SiteFooter() {
   return (
     <footer className="mt-16 px-4 pb-10">
@@ -24,6 +25,10 @@ export default function SiteFooter() {
           >
             TikTok
           </a>
+                    <Link href="/returns" className="underline">
+            Return policy
+          </Link>
+
         </div>
       </div>
     </footer>
