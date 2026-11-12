@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { relName } from "@/lib/relations";
+import { CLOTHING_SIZES, JEANS_SIZES, SHOE_SIZES } from "@/lib/sizes";
 
 function naira(kobo: number) {
   return "₦" + (kobo / 100).toLocaleString("en-NG");
@@ -23,6 +24,8 @@ type Params = {
   min?: string;
   max?: string;
   preorder?: string;
+  size?: string;
+  color?: string;
 };
 
 const field =
@@ -49,7 +52,7 @@ export default async function ShopPage({
   let query = supabase
     .from("products")
     .select(
-      "id, name, slug, price_kobo, sale_price_kobo, is_preorder, created_at, categories(name), product_colors(id, sort_order), product_images(color_id, storage_path, sort_order)"
+      "id, name, slug, price_kobo, sale_price_kobo, is_preorder, created_at, categories(name), product_colors(id, name, sort_order), product_images(color_id, storage_path, sort_order), product_variants(color_id, size_label, stock_quantity)"
     )
     .eq("status", "active");
 
@@ -61,7 +64,31 @@ export default async function ShopPage({
   if (sp.preorder === "1") query = query.eq("is_preorder", true);
 
   const { data } = await query;
-  let products = data ?? [];
+  const catalogue = data ?? [];
+  let products = catalogue;
+
+  // Options for the size and colour filters come from what is on sale now
+  const sizeRank = [...CLOTHING_SIZES, ...JEANS_SIZES, ...SHOE_SIZES];
+  const sizeOptions = Array.from(
+    new Set(
+      catalogue.flatMap((p) =>
+        (p.product_variants ?? [])
+          .filter((v) => p.is_preorder || v.stock_quantity > 0)
+          .map((v) => v.size_label)
+      )
+    )
+  ).sort((a, b) => sizeRank.indexOf(a) - sizeRank.indexOf(b));
+
+  const colorMap = new Map<string, string>();
+  for (const p of catalogue) {
+    for (const c of p.product_colors ?? []) {
+      const key = c.name.trim().toLowerCase();
+      if (!colorMap.has(key)) colorMap.set(key, c.name.trim());
+    }
+  }
+  const colorOptions = Array.from(colorMap.entries()).sort((a, b) =>
+    a[1].localeCompare(b[1])
+  );
 
   // Price filters use the price the customer would actually pay
   const effective = (p: { sale_price_kobo: number | null; price_kobo: number }) =>
@@ -76,6 +103,26 @@ export default async function ShopPage({
     products = products.filter((p) => effective(p) <= max * 100);
   }
 
+  const sizeSel = sp.size?.trim() || undefined;
+  const colorSel = sp.color?.trim().toLowerCase() || undefined;
+  if (sizeSel || colorSel) {
+    products = products.filter((p) => {
+      const colorIds = colorSel
+        ? (p.product_colors ?? [])
+            .filter((c) => c.name.trim().toLowerCase() === colorSel)
+            .map((c) => c.id)
+        : null;
+      if (colorIds && colorIds.length === 0) return false;
+      if (!sizeSel) return true;
+      return (p.product_variants ?? []).some(
+        (v) =>
+          v.size_label === sizeSel &&
+          (p.is_preorder || v.stock_quantity > 0) &&
+          (!colorIds || colorIds.includes(v.color_id))
+      );
+    });
+  }
+
   products = [...products].sort((a, b) => {
     if (sp.sort === "price_asc") return effective(a) - effective(b);
     if (sp.sort === "price_desc") return effective(b) - effective(a);
@@ -87,6 +134,8 @@ export default async function ShopPage({
     sp.min && min > 0,
     sp.max && max > 0,
     sp.preorder === "1",
+    sizeSel,
+    colorSel,
   ].filter(Boolean).length;
 
   return (
@@ -127,6 +176,30 @@ export default async function ShopPage({
               <option value="" className="text-black">Newest</option>
               <option value="price_asc" className="text-black">Price: low to high</option>
               <option value="price_desc" className="text-black">Price: high to low</option>
+            </select>
+          </label>
+
+          <label className="block text-sm">
+            Size
+            <select name="size" defaultValue={sizeSel ?? ""} className={field}>
+              <option value="" className="text-black">Any size</option>
+              {sizeOptions.map((s) => (
+                <option key={s} value={s} className="text-black">
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block text-sm">
+            Colour
+            <select name="color" defaultValue={colorSel ?? ""} className={field}>
+              <option value="" className="text-black">Any colour</option>
+              {colorOptions.map(([key, label]) => (
+                <option key={key} value={key} className="text-black">
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
 
