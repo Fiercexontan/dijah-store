@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
+/* DIJAH brand palette. Plum, lilac and mist are sampled from the logo. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --plum: #480060;
+  --night: #240638;
+  --lilac: #ca80e1;
+  --mist: #faf3fb;
+  --gold: #d4af6a;
+  --rose: #f9a8d4;
+  --mint: #5eead4;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-plum: var(--plum);
+  --color-night: var(--night);
+  --color-lilac: var(--lilac);
+  --color-mist: var(--mist);
+  --color-gold: var(--gold);
+  --color-rose: var(--rose);
+  --color-mint: var(--mint);
+  --font-sans: var(--font-dm-sans);
+  --font-heading: var(--font-playfair);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: radial-gradient(
+      circle at 15% 0%,
+      #4b1d7a 0%,
+      transparent 55%
+    ),
+    radial-gradient(circle at 100% 100%, #5a0d52 0%, transparent 50%),
+    var(--night);
+  background-attachment: fixed;
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* Frosted glass panel: use class="glass" on any card or panel */
+@utility glass {
+  background: rgb(255 255 255 / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.25);
 }

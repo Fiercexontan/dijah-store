@@ -140,7 +140,7 @@ export default async function ShopPage({
 
   return (
     <main className="min-h-screen bg-purple-950 px-4 py-8 text-white">
-      <h1 className="text-2xl font-bold tracking-wide">Shop</h1>
+        <h1 className="font-heading text-4xl font-bold tracking-wide">Shop</h1>
 
       <details
         open={activeCount > 0}

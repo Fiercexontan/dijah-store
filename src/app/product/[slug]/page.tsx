@@ -31,9 +31,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const { product } = await getProduct(slug);
   return {
-    title: product
-      ? `${product.name} | DIJAH FASHION & ACCESSORIES`
-      : "Product not found",
+        title: product ? product.name : "Product not found",
   };
 }
 
