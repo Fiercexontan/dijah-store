@@ -26,6 +26,9 @@ export default async function PanelLayout({
         <Link href="/admin/products" className="rounded-lg bg-white/10 px-3 py-2">
           Products
         </Link>
+        <Link href="/admin/orders" className="rounded-lg bg-white/10 px-3 py-2">
+          Orders
+        </Link>
       </nav>
 
       <div className="px-5 py-6">{children}</div>
