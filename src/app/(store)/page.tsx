@@ -5,6 +5,7 @@ import ProductCard from "@/components/ProductCard";
 import { mainImagePath, naira } from "@/lib/format";
 import { relName } from "@/lib/relations";
 import WhyShop from "@/components/WhyShop";
+import BannerSlideshow, { type Slide } from "@/components/BannerSlideshow";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -28,6 +29,23 @@ export default async function HomePage() {
       (!b.starts_at || new Date(b.starts_at).getTime() <= now) &&
       (!b.ends_at || new Date(b.ends_at).getTime() >= now)
   );
+  
+    const slides: Slide[] = banners.map((b) => ({
+    id: b.id,
+    title: b.title,
+    subtitle: b.subtitle,
+    imageUrl: supabase.storage.from("product-images").getPublicUrl(b.image_path)
+      .data.publicUrl,
+    href: b.link_url?.startsWith("/") ? b.link_url : null,
+    endsText: b.ends_at
+      ? "Ends " +
+        new Date(b.ends_at).toLocaleDateString("en-NG", {
+          day: "numeric",
+          month: "short",
+          timeZone: "Africa/Lagos",
+        })
+      : null,
+  }));
 
   const whatsapp = setting?.value
     ? `https://wa.me/${setting.value}?text=${encodeURIComponent(
@@ -55,41 +73,9 @@ export default async function HomePage() {
 
   return (
     <main>
-      {banners.length > 0 && (
+            {slides.length > 0 && (
         <section className="mx-auto mt-4 max-w-6xl px-3">
-          <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none]">
-            {banners.map((b) => {
-              const url = supabase.storage
-                .from("product-images")
-                .getPublicUrl(b.image_path).data.publicUrl;
-              const slide = (
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={b.title} className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-night/90 via-night/30 to-transparent" />
-                  <div className="absolute bottom-0 p-5">
-                    <p className="font-heading text-2xl font-bold text-gold sm:text-4xl">
-                      {b.title}
-                    </p>
-                    {b.subtitle && (
-                      <p className="mt-1 text-sm text-white/90 sm:text-base">
-                        {b.subtitle}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-              return (
-                <li key={b.id} className="w-[88%] shrink-0 snap-center sm:w-[70%]">
-                  {b.link_url?.startsWith("/") ? (
-                    <Link href={b.link_url}>{slide}</Link>
-                  ) : (
-                    slide
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <BannerSlideshow slides={slides} />
         </section>
       )}
 
@@ -130,7 +116,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-            <div className="glass animate-float rounded-[2rem] p-4">
+            <div className="glass animate-float rounded-4xl p-4">
             <Image
               src="/dijah-logo.png"
               alt="DIJAH Fashion & Accessories"
@@ -208,7 +194,7 @@ export default async function HomePage() {
 
       {whatsapp && (
         <section className="mx-auto mt-12 max-w-6xl px-3">
-          <div className="glass relative overflow-hidden rounded-[2rem] p-8 text-center sm:p-12">
+          <div className="glass relative overflow-hidden rounded-4xl p-8 text-center sm:p-12">
             <div className="pointer-events-none absolute -top-16 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-gold/25 blur-3xl" />
             <h2 className="font-heading relative text-3xl font-bold sm:text-4xl">
               Can&apos;t decide? Let&apos;s chat.
