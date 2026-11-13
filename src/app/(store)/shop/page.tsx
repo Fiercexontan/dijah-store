@@ -1,22 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { relName } from "@/lib/relations";
+import { mainImagePath, naira } from "@/lib/format";
 import { CLOTHING_SIZES, JEANS_SIZES, SHOE_SIZES } from "@/lib/sizes";
-
-function naira(kobo: number) {
-  return "₦" + (kobo / 100).toLocaleString("en-NG");
-}
-
-// The first photo of the first colour is the product's main photo
-function mainImagePath(
-  colors: { id: string; sort_order: number }[],
-  images: { color_id: string | null; storage_path: string; sort_order: number }[]
-): string | null {
-  const firstColor = [...colors].sort((a, b) => a.sort_order - b.sort_order)[0];
-  const sorted = [...images].sort((a, b) => a.sort_order - b.sort_order);
-  const img = sorted.find((i) => i.color_id === firstColor?.id) ?? sorted[0];
-  return img?.storage_path ?? null;
-}
+import ProductCard from "@/components/ProductCard";
 
 type Params = {
   category?: string;
@@ -139,13 +126,15 @@ export default async function ShopPage({
   ].filter(Boolean).length;
 
   return (
-    <main className="min-h-screen bg-purple-950 px-4 py-8 text-white">
-        <h1 className="font-heading text-4xl font-bold tracking-wide">Shop</h1>
+    <main className="mx-auto max-w-6xl px-4 py-8">
+      <h1 className="font-heading text-4xl font-bold tracking-wide">
+        {selected ? selected.name : "Shop"}
+      </h1>
+      <p className="mt-1 text-sm text-lilac">
+        {products.length} {products.length === 1 ? "item" : "items"}
+      </p>
 
-      <details
-        open={activeCount > 0}
-        className="mt-5 rounded-2xl border border-white/15 bg-white/10 p-4"
-      >
+      <details open={activeCount > 0} className="glass mt-5 rounded-2xl p-4">
         <summary className="cursor-pointer font-semibold">
           Filters &amp; sorting{activeCount > 0 ? ` (${activeCount})` : ""}
         </summary>
@@ -154,7 +143,7 @@ export default async function ShopPage({
           <label className="block text-sm">
             Category
             <select name="category" defaultValue={selected?.slug ?? ""} className={field}>
-              <option value="">All categories</option>
+              <option value="" className="text-black">All categories</option>
               {parents.map((parent) => (
                 <optgroup key={parent.id} label={parent.name}>
                   <option value={parent.slug} className="text-black">
@@ -239,7 +228,7 @@ export default async function ShopPage({
           </label>
 
           <div className="flex gap-3 sm:col-span-2">
-            <button className="rounded-xl bg-white px-5 py-2 font-semibold text-purple-950">
+            <button className="rounded-xl bg-gold px-6 py-2 font-semibold text-night">
               Apply
             </button>
             <Link
@@ -253,11 +242,11 @@ export default async function ShopPage({
       </details>
 
       {products.length === 0 ? (
-        <p className="mt-8 text-purple-200">
+        <p className="mt-8 text-white/70">
           {activeCount > 0 ? (
             <>
               No products match these filters.{" "}
-              <Link href="/shop" className="underline">
+              <Link href="/shop" className="text-gold underline">
                 Clear filters
               </Link>
             </>
@@ -269,51 +258,24 @@ export default async function ShopPage({
         <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {products.map((p) => {
             const path = mainImagePath(p.product_colors ?? [], p.product_images ?? []);
-            const url = path
-              ? supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl
-              : null;
-            const onSale = p.sale_price_kobo !== null;
-
             return (
               <li key={p.id}>
-                  <Link
-                  href={`/product/${p.slug}`}
-                  className="group block transition duration-300 ease-out hover:-translate-y-2 active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0" 
-                  >
-                    <div className="relative overflow-hidden rounded-2xl bg-white/10 shadow-lg transition duration-300 group-hover:shadow-2xl group-hover:shadow-black/40">
-                    {url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={url}
-                        alt={p.name}
-                          className="aspect-[3/4] w-full object-cover transition duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"
-                      />
-                    ) : (
-                      <div className="flex aspect-[3/4] items-center justify-center text-sm text-purple-300">
-                        No photo yet
-                      </div>
-                    )}
-                    {p.is_preorder && (
-                      <span className="absolute left-2 top-2 rounded-full bg-fuchsia-500/80 px-2 py-1 text-xs">
-                        Pre-order
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-2 text-sm font-semibold">{p.name}</p>
-                  <p className="text-xs text-purple-200">{relName(p.categories)}</p>
-                  <p className="mt-1 text-sm">
-                    {onSale ? (
-                      <>
-                        <span className="font-semibold">{naira(p.sale_price_kobo!)}</span>{" "}
-                        <span className="text-xs text-purple-300 line-through">
-                          {naira(p.price_kobo)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="font-semibold">{naira(p.price_kobo)}</span>
-                    )}
-                  </p>
-                </Link>
+                <ProductCard
+                  slug={p.slug}
+                  name={p.name}
+                  categoryName={relName(p.categories)}
+                  priceText={naira(p.price_kobo)}
+                  salePriceText={
+                    p.sale_price_kobo !== null ? naira(p.sale_price_kobo) : null
+                  }
+                  isPreorder={p.is_preorder}
+                  imageUrl={
+                    path
+                      ? supabase.storage.from("product-images").getPublicUrl(path)
+                          .data.publicUrl
+                      : null
+                  }
+                />
               </li>
             );
           })}

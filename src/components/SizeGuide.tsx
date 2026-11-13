@@ -4,7 +4,7 @@ export default function SizeGuide() {
   const guide = JEANS_GUIDE;
 
   return (
-    <details className="rounded-2xl border border-white/15 bg-white/10 p-4">
+    <details className="glass rounded-2xl p-4">
       <summary className="cursor-pointer font-semibold">{guide.title}</summary>
 
       <div className="mt-3 overflow-x-auto">
@@ -32,7 +32,7 @@ export default function SizeGuide() {
         </table>
       </div>
 
-      <p className="mt-3 text-xs text-purple-200">{guide.note}</p>
+      <p className="mt-3 text-xs text-lilac">{guide.note}</p>
     </details>
   );
 }

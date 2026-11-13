@@ -85,8 +85,8 @@ export default async function ProductPage({
     category?.size_type === "waist" || category?.size_type === "clothing_waist";
 
   return (
-    <main className="min-h-screen bg-purple-950 px-4 py-6 text-white">
-      <Link href="/shop" className="text-sm text-purple-200 underline">
+        <main className="mx-auto max-w-6xl px-4 py-6">
+            <Link href="/shop" className="text-sm text-lilac underline">
         ← Back to shop
       </Link>
 

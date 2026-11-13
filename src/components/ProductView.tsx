@@ -69,7 +69,7 @@ export default function ProductView({
 
   if (!color) {
     return (
-      <p className="mt-6 text-purple-200">
+      <p className="mt-6 text-lilac">
         Details for this item are coming soon.
       </p>
     );
@@ -125,12 +125,12 @@ export default function ProductView({
               <span className="text-base text-purple-300 line-through">{priceText}</span>
             </>
           ) : (
-            <span className="font-semibold">{priceText}</span>
+            <span className="font-semibold text-gold">{salePriceText}</span>
           )}
         </p>
 
         {isPreorder && (
-          <p className="mt-3 rounded-xl bg-fuchsia-500/20 px-4 py-3 text-sm">
+          <p className="mt-3 rounded-xl bg-rose/20 px-4 py-3 text-sm text-rose">
             Pre-order item.{" "}
             {expectedText
               ? `Expected around ${expectedText}.`
@@ -138,7 +138,7 @@ export default function ProductView({
           </p>
         )}
 
-        <p className="mt-6 text-sm text-purple-200">
+        <p className="mt-6 text-sm text-lilac">
           Colour: <span className="font-semibold text-white">{color.name}</span>
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -169,9 +169,9 @@ export default function ProductView({
           ))}
         </div>
 
-        <p className="mt-6 text-sm text-purple-200">Size</p>
+        <p className="mt-6 text-sm text-lilac">Size</p>
         {color.sizes.length === 0 ? (
-          <p className="mt-2 text-sm text-purple-200">
+          <p className="mt-2 text-sm text-lilac">
             No sizes listed for this colour yet. Ask us on WhatsApp.
           </p>
         ) : (
@@ -197,7 +197,7 @@ export default function ProductView({
           </div>
         )}
         {size && !isPreorder && (
-          <p className="mt-2 text-xs text-purple-200">
+          <p className="mt-2 text-xs text-lilac">
             {(() => {
               const left = color.sizes.find((s) => s.label === size)?.stock ?? 0;
               return left <= 3 ? `Only ${left} left` : "In stock";
@@ -227,7 +227,7 @@ export default function ProductView({
           <div className="mt-8 space-y-3">
             <button
               onClick={() => chat()}
-              className="w-full rounded-xl bg-white py-3 font-semibold text-purple-950"
+              className="w-full rounded-xl bg-mint py-3 font-semibold text-night"
             >
               Ask about this on WhatsApp
             </button>
