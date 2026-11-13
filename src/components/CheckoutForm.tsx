@@ -233,6 +233,18 @@ export default function CheckoutForm() {
             and not for a change of mind or a wrong size or colour I selected.
           </span>
         </label>
+        
+                <p className="text-xs text-white/60">
+          By placing your order, you agree to our{" "}
+          <Link href="/terms" target="_blank" className="text-gold underline">
+            terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" target="_blank" className="text-gold underline">
+            privacy policy
+          </Link>
+          .
+        </p>
 
         {error && (
           <p role="alert" className="rounded-xl bg-red-500/20 px-4 py-3 text-sm">

@@ -5,6 +5,8 @@ const links = [
   { href: "/contact", label: "Contact" },
   { href: "/faq", label: "FAQ" },
   { href: "/returns", label: "Return policy" },
+    { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
 ];
 
 export default function SiteFooter() {
