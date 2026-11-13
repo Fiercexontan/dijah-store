@@ -3,9 +3,17 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { relName } from "@/lib/relations";
 import { sizesFor } from "@/lib/sizes";
-import { setStatus, addColor, saveStock, deleteImage } from "./actions";
+import {
+  setStatus,
+  addColor,
+  saveStock,
+  deleteImage,
+  updateProduct,
+} from "./actions";
 import ImageUploader from "@/components/ImageUploader";
 
+const input =
+  "mt-1 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-base outline-none focus:border-white/60";
 function naira(kobo: number) {
   return "₦" + (kobo / 100).toLocaleString("en-NG");
 }
@@ -55,7 +63,7 @@ export default async function ProductPage({
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, name, price_kobo, status, is_preorder, description, categories(name, size_type), product_colors(id, name, sort_order), product_variants(color_id, size_label, stock_quantity), product_images(id, color_id, storage_path, sort_order)"
+      "id, name, price_kobo, status, is_preorder, description, sale_price_kobo, expected_date, categories(name, size_type), product_colors(id, name, sort_order), product_variants(color_id, size_label, stock_quantity), product_images(id, color_id, storage_path, sort_order)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -98,7 +106,9 @@ export default async function ProductPage({
         <p role="alert" className="mt-4 rounded-xl bg-red-500/20 px-4 py-3 text-sm">
           {error === "color"
             ? "Could not add that colour. Enter a name that this product doesn't already have."
-            : error === "stock"
+                        : error === "edit"
+              ? "Could not save the details. Check the price, and remember a sale price must be lower than the normal price."
+              : error === "stock"
               ? "Could not save stock. Use whole numbers, zero or higher."
               : "Could not change the status. Please try again."}
         </p>
@@ -123,6 +133,84 @@ export default async function ProductPage({
             <StatusButton id={product.id} status="draft" label="Restore as draft" />
           )}
         </div>
+      </section>
+      
+            <section className="mt-8 rounded-2xl border border-white/15 bg-white/10 p-4">
+        <h2 className="text-lg font-bold">Product details</h2>
+        <form action={updateProduct} className="mt-4 max-w-md space-y-4">
+          <input type="hidden" name="id" value={product.id} />
+
+          <label className="block text-sm">
+            Name
+            <input name="name" required defaultValue={product.name} className={input} />
+          </label>
+
+          <label className="block text-sm">
+            Price (₦)
+            <input
+              name="price"
+              type="number"
+              min="1"
+              step="any"
+              inputMode="decimal"
+              required
+              defaultValue={product.price_kobo / 100}
+              className={input}
+            />
+          </label>
+
+          <label className="block text-sm">
+            Sale price (₦), optional
+            <input
+              name="sale_price"
+              type="number"
+              min="1"
+              step="any"
+              inputMode="decimal"
+              defaultValue={
+                product.sale_price_kobo === null ? "" : product.sale_price_kobo / 100
+              }
+              className={input}
+            />
+            <span className="mt-1 block text-xs text-purple-200">
+              Use this for festival discounts. Clear it when the sale ends.
+            </span>
+          </label>
+
+          <label className="block text-sm">
+            Description
+            <textarea
+              name="description"
+              rows={3}
+              defaultValue={product.description ?? ""}
+              className={input}
+            />
+          </label>
+
+          <label className="flex items-center gap-3 text-sm">
+            <input
+              name="is_preorder"
+              type="checkbox"
+              defaultChecked={product.is_preorder}
+              className="h-5 w-5"
+            />
+            This is a pre-order item
+          </label>
+
+          <label className="block text-sm">
+            Expected arrival date (pre-orders only, optional)
+            <input
+              name="expected_date"
+              type="date"
+              defaultValue={product.expected_date ?? ""}
+              className={input}
+            />
+          </label>
+
+          <button className="w-full rounded-xl bg-white py-3 font-semibold text-purple-950">
+            Save details
+          </button>
+        </form>
       </section>
 
       <section className="mt-10">
@@ -150,7 +238,7 @@ export default async function ProductPage({
                         <img
                           src={imageUrl(img.storage_path)}
                           alt={`${product.name} in ${c.name}`}
-                          className="aspect-[3/4] w-full rounded-lg object-cover"
+                          className="aspect-3/4 w-full rounded-lg object-cover"
                         />
                         <form action={deleteImage} className="absolute right-1 top-1">
                           <input type="hidden" name="image_id" value={img.id} />

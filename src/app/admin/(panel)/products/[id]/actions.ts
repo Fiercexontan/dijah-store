@@ -154,3 +154,42 @@ export async function deleteImage(formData: FormData) {
 
   revalidatePath(`/admin/products/${productId}`);
 }
+
+
+export async function updateProduct(formData: FormData) {
+  const { supabase } = await requireAdmin();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const back = (error: string) => redirect(`/admin/products/${id}?error=${error}`);
+
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const price = Number(formData.get("price"));
+  const saleRaw = String(formData.get("sale_price") ?? "").trim();
+  const sale = saleRaw === "" ? null : Number(saleRaw);
+  const isPreorder = formData.get("is_preorder") === "on";
+  const expectedRaw = String(formData.get("expected_date") ?? "").trim();
+
+  if (name.length < 2 || name.length > 150) back("edit");
+  if (!Number.isFinite(price) || price <= 0 || price > 100_000_000) back("edit");
+  if (sale !== null && (!Number.isFinite(sale) || sale <= 0 || sale >= price)) back("edit");
+  if (expectedRaw !== "" && !/^\d{4}-\d{2}-\d{2}$/.test(expectedRaw)) back("edit");
+
+  const { error } = await supabase
+    .from("products")
+    .update({
+      name,
+      description: description || null,
+      price_kobo: Math.round(price * 100),
+      sale_price_kobo: sale === null ? null : Math.round(sale * 100),
+      is_preorder: isPreorder,
+      expected_date: isPreorder && expectedRaw ? expectedRaw : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) back("edit");
+
+  revalidatePath(`/admin/products/${id}`);
+  revalidatePath("/admin/products");
+}
