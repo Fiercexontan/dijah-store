@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyTransaction } from "@/lib/paystack";
+import { notifyOwnerOfPaidOrder } from "@/lib/notifications";
 
 export type ConfirmResult =
   | { ok: true; token: string; alreadyProcessed: boolean }
@@ -61,6 +62,15 @@ export async function confirmPayment(reference: string): Promise<ConfirmResult> 
   if (error) {
     console.error("mark_order_paid failed", error.message);
     return { ok: false, reason: "error", token };
+  }
+  
+    const orderId = (data as { order_id?: string } | null)?.order_id;
+  if (orderId) {
+    try {
+      await notifyOwnerOfPaidOrder(orderId);
+    } catch (e) {
+      console.error("owner notification failed", e);
+    }
   }
 
   return {
