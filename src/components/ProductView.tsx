@@ -86,10 +86,10 @@ export default function ProductView({
             <img
               src={mainImage}
               alt={`${name} in ${color.name}`}
-              className="aspect-[3/4] w-full object-cover"
+              className="aspect-3/4 w-full object-cover"
             />
           ) : (
-            <div className="flex aspect-[3/4] items-center justify-center text-sm text-purple-300">
+            <div className="flex aspect-3/4 items-center justify-center text-sm text-purple-300">
               No photo yet
             </div>
           )}

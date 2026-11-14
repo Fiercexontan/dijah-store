@@ -8,7 +8,7 @@ export default function SizeGuide() {
       <summary className="cursor-pointer font-semibold">{guide.title}</summary>
 
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[34rem] text-left text-sm">
+        <table className="w-full min-w-136 text-left text-sm">
           <thead>
             <tr className="border-b border-white/20">
               {guide.columns.map((c) => (

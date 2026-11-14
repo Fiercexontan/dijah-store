@@ -35,6 +35,9 @@ export default async function PanelLayout({
                 <Link href="/admin/settings" className="rounded-lg bg-white/10 px-3 py-2">
           Settings
         </Link>
+                <Link href="/admin/account" className="rounded-lg bg-white/10 px-3 py-2">
+          Account
+        </Link>
       </nav>
 
       <div className="px-5 py-6">{children}</div>
