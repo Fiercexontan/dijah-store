@@ -53,6 +53,16 @@ export default async function OrderPage({
 
   if (!order) notFound();
   const items = order.order_items ?? [];
+    const { data: wa } = await admin
+    .from("store_settings")
+    .select("value")
+    .eq("key", "whatsapp_number")
+    .maybeSingle();
+  const chat = wa?.value
+    ? `https://wa.me/${wa.value}?text=${encodeURIComponent(
+        `Hello DIJAH FASHION & ACCESSORIES, I've just paid for order ${order.order_number}. Please confirm you received it.`
+      )}`
+    : null;
   const isPaid = order.payment_status === "paid";
   const canPay = order.payment_status !== "paid" && order.status === "pending_payment";
 
@@ -75,7 +85,18 @@ export default async function OrderPage({
           </p>
         </div>
       )}
-
+      
+            {isPaid && chat && (
+        <a
+          href={chat}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-block rounded-xl bg-mint px-6 py-3 font-semibold text-night"
+        >
+          Message us about this order on WhatsApp
+        </a>
+      )}
+      
       {!isPaid && sp.payment && paymentNotes[sp.payment] && (
         <p className="mt-5 rounded-2xl bg-rose/15 px-5 py-4 text-sm text-rose">
           {paymentNotes[sp.payment]}
